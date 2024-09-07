@@ -15,6 +15,14 @@ exports.bookAppointment = async (req, res) => {
         if (!doctor) {
             return res.status(404).json({ message: 'Doctor not found' });
         }
+         // Check if the appointment date is within the doctor's available date range
+         const requestedDate = parseInt(date); // Ensure date is in integer format
+         const dateFrom = parseInt(doctor.datefrom);
+         const dateTo = parseInt(doctor.dateto);
+ 
+         if (requestedDate < dateFrom || requestedDate > dateTo) {
+             return res.status(400).json({ message: `Doctor is only available from date ${doctor.datefrom} to ${doctor.dateto}.` });
+         }
 
         const openingTime = parseTime(doctor.openingTime);
         const closingTime = parseTime(doctor.closingTime);
@@ -65,11 +73,12 @@ const parseTime = (timeStr) => {
 
 // Get booking history for a user
 exports.getBookingHistory = async (req, res) => {
+    console.log("api called succesfully in appontment history")
     const { userId } = req.params;
 
     try {
         const appointments = await Appointment.find({ user: userId })
-            .populate('doctor', 'name specialization')
+            .populate('doctor')
             .sort({ createdAt: -1 }); 
         res.json({ appointments });
     } catch (error) {
