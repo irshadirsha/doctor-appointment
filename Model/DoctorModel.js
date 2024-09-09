@@ -16,10 +16,12 @@ const doctorSchema = new mongoose.Schema({
       type:String
     },
     datefrom:{
-      type:String
+      type: Date, 
+      required: true
     },
     dateto:{
-      type:String
+      type: Date,
+      required: true
     },
     // availableSlots: [
     //   {

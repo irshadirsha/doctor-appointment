@@ -105,13 +105,13 @@ exports.login = async (req, res) => {
     }
 };
 
-exports.getdata= async (req, res) => {
-    console.log("api called in check passs");
+// exports.getdata= async (req, res) => {
+//     console.log("api called in check passs");
     
-    let user = await User.find();
-    console.log("user-------", user)
-    res.json({
-        message:"auth passed",
-        data:user
-    })
-}
+//     let user = await User.find();
+//     console.log("user-------", user)
+//     res.json({
+//         message:"auth passed",
+//         data:user
+//     })
+// }
