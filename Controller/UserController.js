@@ -6,21 +6,22 @@ const emailService = require('../utils/emailService');
 
 exports.register = async (req, res) => {
     try {
-        console.log("api called in post register succesfully");
-        
         const { name, email, password } = req.body;
+        console.log("api called in post register succesfully", name, email, password);
+        
         let user = await User.findOne({ email });
         if (user) {
             return res.status(400).json({ message: 'User already exists' });
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
-
+        const otp = otpService.generateOtp();
         user = new User({
             name,
             email,
             password: hashedPassword,
-            otp: otpService.generateOtp(),
+            otp,
+            otpCreatedAt: new Date(),
             isVerified: false,  
         });
 
@@ -45,16 +46,22 @@ exports.verifyOtp = async (req, res) => {
             return res.status(400).json({ message: 'User not found' });
         }
 
-        if (user.otp === otp) {
-            user.isVerified = true; 
-            user.otp = null; 
-            await user.save();
-            console.log("updated data",user);
-            
-            res.status(200).json({ message: 'OTP verified. User registration completed.' });
-        } else {
-            res.status(400).json({ message: 'Invalid OTP' });
+        if (!user.otp) {
+            return res.status(400).json({ message: 'your OTP is expired' });
         }
+        if (user.otp !== otp) {
+            return res.status(400).json({ message: 'Invalid OTP' });
+        }
+       
+        user.isVerified = true;
+        user.otp = null;
+        user.otpCreatedAt = null;  // Reset the otpCreatedAt field
+        await user.save();
+
+        res.status(200).json({
+            status:true,
+             message: 'OTP verified. User registration completed.'
+            });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

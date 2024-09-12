@@ -1,7 +1,72 @@
 const Doctor = require('../Model/DoctorModel');
 const Appointment = require('../Model/AppointmentModel');
 
-// Get available doctors and their time slots
+
+const jwt = require('jsonwebtoken');
+
+
+exports.DoctorLogin = async (req, res) => {
+    const { email, password } = req.body;
+    console.log("api call doctor login", password, email);
+  
+    try {
+      // Find the doctor by email
+      const doctor = await Doctor.findOne({ email });
+  console.log("doctor",doctor)
+      if (!doctor) {
+        return res.status(404).json({ message: 'Doctor not found' });
+      }
+  
+      // Compare the provided password with the stored password
+      if (password !== doctor.password) {
+          console.log("pass not mathc")
+        return res.status(400).json({ message: 'Invalid password' });
+      }
+  
+      // Create a JWT token   
+      const token = jwt.sign(
+        { id: doctor._id, email: doctor.email },
+        process.env.JWT_SECRET,
+        { expiresIn: '1h' } // Token expires in 1 hour
+      );
+     console.log("token", token)
+      res.status(200).json({
+        message: 'Login successful',
+        status:true,
+        token,    
+        doctor: {
+          id: doctor._id,
+          name: doctor.name,
+          email: doctor.email,
+          speciality: doctor.speciality,
+        }
+      });
+    } catch (error) {
+      console.error('Error logging in doctor:', error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  };
+
+
+  exports.DoctorProfile = async(req,res)=>{
+    const doctorId = req.params.id;
+    console.log("api calledin profile");
+    
+    const doctor = await Doctor.findById(doctorId);
+    console.log("doctorid",doctor);
+    
+    try {
+    if (!doctor) {
+      return res.status(404).json({ message: 'Doctor not found' });
+    }
+    res.status(200).json({ doctor });
+  } catch (error) {
+    console.error('Error fetching doctor profile:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+}
+
+
 exports.getAvailableDoctors = async (req, res) => {
     try {
         const doctors = await Doctor.find().select('name specialization availableSlots');

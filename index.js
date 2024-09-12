@@ -17,8 +17,9 @@ db()
 
 app.use(cors({
     origin:"http://localhost:5173",
-    methods:["GET","POST"]         
+    methods:["GET","POST","PUT", "PATCH"]         
 }))
+// app.use(cors())rsrs
 
 app.use(express.json())
 app.use(passport.initialize());

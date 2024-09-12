@@ -6,6 +6,10 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   otp: { type: String },  
+  otpCreatedAt: {
+    type: Date,
+    default: Date.now,
+    expires: 120},
   isVerified: { type: Boolean, default: false },  
   role: { type: String, enum: ['user', 'admin'], default: 'user' },
   appointments: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Appointment' }],
