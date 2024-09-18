@@ -114,7 +114,10 @@ exports.getBookingHistory = async (req, res) => {
   console.log("Received userId:", userId); 
 
   try {
-      const bookings = await AppointmentModel.find({ userId: userId.trim() }).populate('userId').populate('docId')
+      const bookings = await AppointmentModel.find({ userId: userId.trim() })
+      .populate('userId')
+      .populate('docId')
+      .sort({ createdAt: -1 })
       console.log("Bookings for user:", bookings); 
       
       if (!bookings || bookings.length === 0) {
