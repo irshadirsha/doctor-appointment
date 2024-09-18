@@ -1,14 +1,21 @@
 const express = require('express');
 const router = express.Router();
 const passport = require('passport');
-const {   BookAppointment, getDoctorSlots } = require('../Controller/AppointmentController');
+const path = require('path');
+const {   BookAppointment, 
+          getDoctorSlots,
+          getBookingHistory,
+          DownloadInvoice,
+          CancelAppointment } = require('../Controller/AppointmentController');
 
-// Book an appointment
-router.get('/book-appointment/:docId', getDoctorSlots);
-router.post('/book-appointment', BookAppointment);
-// router.post('/book', passport.authenticate('jwt', { session: false }), bookAppointment);
 
-// Get booking history for a user
-// router.get('/history/:userId', passport.authenticate('jwt', { session: false }), getBookingHistory);
+router.get('/book-appointment/:docId',getDoctorSlots);
+router.post('/book-appointment',passport.authenticate('user-rule', { session: false }), BookAppointment);
+router.get('/download/:appointmentId', DownloadInvoice);
+router.get('/booking-history/:userId',passport.authenticate('user-rule', { session: false }), getBookingHistory);
+router.get('/cancel-appoint/:appId',passport.authenticate('user-rule', { session: false }), CancelAppointment);
 
 module.exports = router;
+
+
+                    

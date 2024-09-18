@@ -55,7 +55,7 @@ exports.verifyOtp = async (req, res) => {
        
         user.isVerified = true;
         user.otp = null;
-        user.otpCreatedAt = null;  // Reset the otpCreatedAt field
+        user.otpCreatedAt = null;  
         await user.save();
 
         res.status(200).json({
@@ -70,7 +70,7 @@ exports.verifyOtp = async (req, res) => {
 
 // Login User
 exports.login = async (req, res) => {
-    try {
+    try {       
         const { email, password } = req.body;
         console.log("login api called succesfully");
         
@@ -83,7 +83,6 @@ exports.login = async (req, res) => {
             return res.status(400).json({ message: 'Account not verified. Please verify your email.' });
         }
 
-
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
             return res.status(400).json({ message: 'Invalid credentials' });
@@ -93,7 +92,7 @@ exports.login = async (req, res) => {
         const payload = {
                 id: user._id,
                 email: user.email,
-                role: user.role
+                role: "user"
         };
 
         const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' });

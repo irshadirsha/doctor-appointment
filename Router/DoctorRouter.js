@@ -1,19 +1,22 @@
 const express = require ('express')
 const router= express.Router()
-
-const { getAvailableDoctors, manageSlots, getAvailableDoctorsOnDate, getAvailableDoctorsOnSpec, DoctorLogin, DoctorProfile  } = require('../Controller/DoctorController');
 const passport = require('passport');
 
-// Get available doctors
+const { 
+    DoctorLogin, 
+    DoctorProfile, 
+    getDoctorAppointments,  
+    CancelAppointment,
+    CompleteAppointment,
+    DoctorDashBoard} = require('../Controller/DoctorController');
+
 router.post('/doctor-login',DoctorLogin)
-router.get('/doctor-profile/:id',DoctorProfile)
-
-router.get('/available-doctor', passport.authenticate('jwt', { session: false }), getAvailableDoctors);
-router.get('/available-doctor-date/:day/:month/:year', passport.authenticate('jwt', { session: false }), getAvailableDoctorsOnDate);
-router.get('/available-doctor-spec', passport.authenticate('jwt', { session: false }), getAvailableDoctorsOnSpec);
-
-// Manage doctor time slots
-router.put('/slots/:doctorId', passport.authenticate('jwt', { session: false }), manageSlots);
+router.get('/doctor-profile/:id', passport.authenticate('doctor-rule', { session: false }), DoctorProfile)
+router.get('/doctor-appointments/:doctorId',passport.authenticate('doctor-rule', { session: false }),  getDoctorAppointments);              
+router.put('/cancel-appoint/:docId/:appointmentId',passport.authenticate('doctor-rule', { session: false }),  CancelAppointment);
+router.put('/complete-appoint/:docId/:appointmentId', passport.authenticate('doctor-rule', { session: false }),  CompleteAppointment);
+router.get('/doctor-dashboard/:docId',passport.authenticate('doctor-rule', { session: false }),  DoctorDashBoard);             
 
 module.exports = router;
 
+//

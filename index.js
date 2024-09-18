@@ -3,9 +3,11 @@ const cors = require ('cors')
 const passport = require('passport');
 const db = require ('./config/connection')
 
-require('dotenv').config();
-require('./config/passport')(passport);
 
+require('dotenv').config();
+require('./config/passportUser')(passport);
+require('./config/passportAdmin')(passport)
+require('./config/passportDoctor')(passport)
 const UserRouter =require('./Router/UserRouter')
 const AdminRouter= require('./Router/AdminRouter')
 const DoctorRouter= require('./Router/DoctorRouter')
@@ -17,8 +19,8 @@ db()
 
 app.use(cors({
     origin:"http://localhost:5173",
-    methods:["GET","POST","PUT", "PATCH"]         
-}))
+    methods:["GET","POST","PUT", "PATCH", "DELETE"]         
+}))         
 // app.use(cors())rsrs
 
 app.use(express.json())
