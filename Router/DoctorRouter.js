@@ -8,9 +8,11 @@ const {
     getDoctorAppointments,  
     CancelAppointment,
     CompleteAppointment,
-    DoctorDashBoard} = require('../Controller/DoctorController');
+    DoctorDashBoard,
+    refreshAccessToken} = require('../Controller/DoctorController');
 
 router.post('/doctor-login',DoctorLogin)
+router.post('/refresh-token',refreshAccessToken);
 router.get('/doctor-profile/:id', passport.authenticate('doctor-rule', { session: false }), DoctorProfile)
 router.get('/doctor-appointments/:doctorId',passport.authenticate('doctor-rule', { session: false }),  getDoctorAppointments);              
 router.put('/cancel-appoint/:docId/:appointmentId',passport.authenticate('doctor-rule', { session: false }),  CancelAppointment);
@@ -19,4 +21,3 @@ router.get('/doctor-dashboard/:docId',passport.authenticate('doctor-rule', { ses
 
 module.exports = router;
 
-//

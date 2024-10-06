@@ -18,17 +18,27 @@ exports.DoctorLogin = async (req, res) => {
         return res.status(400).json({ message: 'Invalid password' });
       }
   
-      // Create a JWT token   
-      const token = jwt.sign(
-        { id: doctor._id, email: doctor.email, role:"doctor" },
-        process.env.JWT_SECRET,
-        { expiresIn: '1h' } 
+      const doctoraccessToken = jwt.sign(
+        { id: doctor._id, email: doctor.email, role: 'doctor' },
+        process.env.JWT_SECRET, 
+        { expiresIn: '1m' } 
       );
-     console.log("token", token)
+
+      const doctorrefreshToken = jwt.sign(              
+        { id: doctor._id, email: doctor.email, role: 'doctor' },
+        process.env.JWT_Doctor_REFRESH_SECRET, 
+        { expiresIn: '7d' }  
+      );
+  
+      doctor.refreshToken = doctorrefreshToken; 
+      await doctor.save();
+     
+     console.log("token", doctoraccessToken,doctorrefreshToken)
       res.status(200).json({
         message: 'Login successful',
         status:true,
-        token,    
+        doctoraccessToken,
+        doctorrefreshToken,
         doctor: {
           id: doctor._id,
           name: doctor.name,
@@ -178,3 +188,29 @@ exports.DoctorDashBoard = async (req, res) => {
 
 
 
+      exports.refreshAccessToken = async (req, res) => {
+        const { refreshToken } = req.body;
+        console.log("refresh token in doctor--------------------- ",refreshToken);
+        
+        if (!refreshToken) {
+          return res.status(403).json({ message: 'Refresh token required' });
+        }
+      
+        try {
+          // Verify refresh token
+          const decoded = jwt.verify(refreshToken, process.env.JWT_Doctor_REFRESH_SECRET);
+          console.log("decoded data doctoer-------------------",decoded)
+          // Create a new access token
+          const newAccessToken = jwt.sign(
+            { id: decoded.id, email: decoded.email, role: 'doctor' },
+            process.env.JWT_SECRET,
+            { expiresIn: '1m' }
+          );
+          console.log("new access token______________", newAccessToken);
+          
+          res.status(200).json({ accessToken: newAccessToken });
+        } catch (error) {
+          console.error('Error refreshing access token:', error);
+          res.status(403).json({ message: 'Invalid refresh token' });
+        }
+      };

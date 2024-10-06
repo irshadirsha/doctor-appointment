@@ -80,6 +80,7 @@ exports.login = async (req, res) => {
     try {       
         console.log("login api called succesfully");
         const { email, password } = req.body;
+        console.log("login api called succesfully",email,passowrd);
         
         const user = await User.findOne({ email });
         if (!user) {
