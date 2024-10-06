@@ -22,19 +22,16 @@ exports.AdminLogin = async (req, res) => {
         return res.status(400).json({ message: 'Invalid credentials' });
       }
   
-      // Generate JWT token
       const payload = {
         id: admin._id,
         email: admin.adminEmail,
         role: "admin"
             };
+
   
-      // const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' });
+      const adminaccessToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' }); 
+      const adminrefreshToken = jwt.sign(payload, process.env.JWT_Admin_REFRESH_SECRET, { expiresIn: '7d' });
   
-      const adminaccessToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' }); // Short-lived access token
-      const adminrefreshToken = jwt.sign(payload, process.env.JWT_Admin_REFRESH_SECRET, { expiresIn: '7d' }); // Longer-lived refresh token
-  
-      // Send response
       res.json({
         status:"success",
         adminaccessToken,
@@ -68,7 +65,7 @@ exports.addDoctor = async (req, res) => {
           image 
       } = req.body;
   
-      console.log("Received data:", name, email, password, experience, fees, about, speciality, degree, address, image);
+
   
       try {
           const newDoctor = new Doctor({
@@ -92,7 +89,6 @@ exports.addDoctor = async (req, res) => {
   
        
           await newDoctor.save();
-          console.log("newDoctor",newDoctor)
        
           const transporter = nodemailer.createTransport({
             service: "gmail",
@@ -306,7 +302,6 @@ exports.GetDashboard= async (req, res) => {
           .limit(10)
           .populate('docId') 
           .populate('userId'); 
-       console.log("latest booking", latestBookings);
        
       res.status(200).json({
           totalDoctors,
@@ -320,30 +315,8 @@ exports.GetDashboard= async (req, res) => {
   }
 }
 
-
-// exports.refreshToken = async (req, res) => {
-//   const { refreshToken } = req.body;
-//    console.log("refresh token api called in admin ---", refreshToken);
-//   if (!refreshToken) {
-//     return res.status(401).json({ message: 'Refresh token required' });
-//   }
-
-//   try {
-//     const decoded = jwt.verify(refreshToken, process.env.JWT_Admin_REFRESH_SECRET);
-//     const payload = { id: decoded.id, email: decoded.email, role: decoded.role };
-
-//     // Generate a new access token
-//     const newAccessToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1m' });
-//     console.log("new access token",newAccessToken)
-//     res.json({ accessToken: newAccessToken }); 
-//   } catch (error) {
-//     res.status(401).json({ message: 'Invalid refresh token' });
-//   }
-// };
-
-
 exports.refreshToken = async (req, res) => {
-  const { adminrefreshToken } = req.body;  // update this line
+  const { adminrefreshToken } = req.body; 
   console.log("refresh token api called in admin ---", adminrefreshToken);
   if (!adminrefreshToken) {
     return res.status(401).json({ message: 'Refresh token required' });

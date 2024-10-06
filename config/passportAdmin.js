@@ -1,5 +1,3 @@
-// config/passport-admin.js
-
 const { Strategy: JwtStrategy, ExtractJwt } = require('passport-jwt');
 const Admin = require('../Model/AdminModel'); 
 const dotenv = require('dotenv');

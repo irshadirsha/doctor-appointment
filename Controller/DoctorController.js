@@ -21,7 +21,7 @@ exports.DoctorLogin = async (req, res) => {
       const doctoraccessToken = jwt.sign(
         { id: doctor._id, email: doctor.email, role: 'doctor' },
         process.env.JWT_SECRET, 
-        { expiresIn: '1m' } 
+        { expiresIn: '1d' } 
       );
 
       const doctorrefreshToken = jwt.sign(              
@@ -81,8 +81,6 @@ exports.getDoctorAppointments = async (req, res) => {
             .populate('docId')
             .sort({ slotDate: -1 });
 
-            console.log("appointments",appointments)
-
         if (!appointments.length) {
             return res.status(404).json({ message: 'No appointments found for this doctor' });
         }
@@ -106,8 +104,6 @@ exports.CancelAppointment = async (req, res) => {
             _id: appointmentId,
             docId: docId,
           });
-
-          console.log("fetched",appointment)
       
           if (!appointment) {
             return res.status(404).json({ message: 'Appointment not found' });
@@ -136,7 +132,6 @@ exports.CompleteAppointment = async (req, res) => {
             _id: appointmentId,
             docId: docId,
           });
-          console.log("appointments",appointment);
       
           if (!appointment) {
             return res.status(404).json({ message: 'Appointment not found' });
@@ -148,7 +143,7 @@ exports.CompleteAppointment = async (req, res) => {
       
           appointment.isCompleted = true;
           await appointment.save();
-          console.log(appointment)
+ 
           res.status(200).json({ message: 'Appointment completed successfully', appointment });
         } catch (error) {
           console.error('Error completing appointment:', error);
@@ -161,7 +156,6 @@ exports.DoctorDashBoard = async (req, res) => {
         console.log("api in doctor dashboard", docId);
         try {
           const appointments = await AppointmentModel.find({ docId });
-          console.log("appointments", appointments);
           
           const completedAppointments = appointments.filter(appointment => appointment.isCompleted);
       
@@ -197,14 +191,12 @@ exports.DoctorDashBoard = async (req, res) => {
         }
       
         try {
-          // Verify refresh token
           const decoded = jwt.verify(refreshToken, process.env.JWT_Doctor_REFRESH_SECRET);
           console.log("decoded data doctoer-------------------",decoded)
-          // Create a new access token
           const newAccessToken = jwt.sign(
             { id: decoded.id, email: decoded.email, role: 'doctor' },
             process.env.JWT_SECRET,
-            { expiresIn: '1m' }
+            { expiresIn: '1d' }
           );
           console.log("new access token______________", newAccessToken);
           

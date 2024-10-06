@@ -118,7 +118,7 @@ exports.getBookingHistory = async (req, res) => {
       .populate('userId')
       .populate('docId')
       .sort({ createdAt: -1 })
-      console.log("Bookings for user:", bookings); 
+      
       
       if (!bookings || bookings.length === 0) {
           return res.status(404).json({
