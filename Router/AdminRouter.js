@@ -8,10 +8,11 @@ const { addDoctor,
         GetDoctors, 
         addDoctorSlots, 
         GetAllAppointment, 
-        GetDashboard} = require('../Controller/AdminController');
+        GetDashboard,
+        refreshToken} = require('../Controller/AdminController');
 
 router.post('/admin-login',AdminLogin)
-
+router.post('/refresh-token', refreshToken); 
 router.post('/add-doctor',passport.authenticate('admin-rule', { session: false }),  addDoctor);
 router.get('/get-doctors', GetDoctors);
 router.get('/get-appointment',passport.authenticate('admin-rule', { session: false }),GetAllAppointment) 

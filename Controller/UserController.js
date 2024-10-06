@@ -3,7 +3,12 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const otpService = require('../utils/otpService');
 const emailService = require('../utils/emailService');
+const mongoose = require('mongoose');
 
+// Helper function to generate tokens
+const generateToken = (payload, secret, expiresIn) => {
+    return jwt.sign(payload, secret, { expiresIn });
+};
 exports.register = async (req, res) => {
     try {
         const { name, email, password } = req.body;
@@ -16,6 +21,8 @@ exports.register = async (req, res) => {
 
         const hashedPassword = await bcrypt.hash(password, 10);
         const otp = otpService.generateOtp();
+        console.log("otp",otp);
+        
         user = new User({
             name,
             email,
@@ -71,8 +78,8 @@ exports.verifyOtp = async (req, res) => {
 // Login User
 exports.login = async (req, res) => {
     try {       
-        const { email, password } = req.body;
         console.log("login api called succesfully");
+        const { email, password } = req.body;
         
         const user = await User.findOne({ email });
         if (!user) {
@@ -95,10 +102,15 @@ exports.login = async (req, res) => {
                 role: "user"
         };
 
-        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' });
-
+        const accessToken = generateToken(payload, process.env.JWT_SECRET, '1d'); 
+        const refreshToken = generateToken(payload, process.env.JWT_REFRESH_SECRET, '7d');
+        // const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '3d' });
+        user.refreshToken = refreshToken;
+        await user.save();
         res.json({
-            token,
+            // token,
+            accessToken,
+            refreshToken,
             user: {
                 id: user._id,
                 name: user.name,
@@ -111,6 +123,40 @@ exports.login = async (req, res) => {
     }
 };
 
+exports.refreshToken = async (req, res) => {
+    const { refreshToken } = req.body;
+console.log("refresh token api called inuser ",refreshToken);
+
+    if (!refreshToken) {
+        return res.status(401).json({ message: 'Refresh token required' });
+    }
+
+    try {
+        const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+         console.log("decoded in user",decoded)
+        // Check if the refresh token matches what's stored in the database
+        const user = await User.findById(decoded.id);
+        console.log("user--------",user);
+        
+        if (!user || user.refreshToken !== refreshToken) {
+            console.log('invalid refresh token')
+            return res.status(401).json({ message: 'Invalid refresh token' });
+        }
+
+        // Generate a new access token
+        const payload = { id: user._id, email: user.email, role: "user" };
+        const newAccessToken = generateToken(payload, process.env.JWT_SECRET, '1d');
+        console.log("new access token",newAccessToken);
+        
+        res.json({
+            accessToken: newAccessToken
+        });
+    } catch (error) {
+        console.error("Error refreshing token:", error);
+        return res.status(403).json({ message: 'Invalid or expired refresh token' });
+    }
+};
+          
 // exports.getdata= async (req, res) => {
 //     console.log("api called in check passs");
     

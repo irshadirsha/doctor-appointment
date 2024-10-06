@@ -27,6 +27,11 @@ const doctorSchema = new mongoose.Schema({
   date: { type: Number, required: true }
 },);
 
+doctorSchema.index({ email: 1 });
+doctorSchema.index({ speciality: 1 });
+doctorSchema.index({ "slots_booked.date": 1 });
+doctorSchema.index({ available: 1 });
+
 module.exports = mongoose.model('Doctor', doctorSchema);
 
 

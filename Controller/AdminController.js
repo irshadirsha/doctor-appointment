@@ -29,12 +29,16 @@ exports.AdminLogin = async (req, res) => {
         role: "admin"
             };
   
-      const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' });
+      // const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' });
+  
+      const adminaccessToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' }); // Short-lived access token
+      const adminrefreshToken = jwt.sign(payload, process.env.JWT_Admin_REFRESH_SECRET, { expiresIn: '7d' }); // Longer-lived refresh token
   
       // Send response
       res.json({
         status:"success",
-        token,
+        adminaccessToken,
+        adminrefreshToken,
         user: {
           id: admin._id,
           name: admin.adminName,
@@ -315,3 +319,45 @@ exports.GetDashboard= async (req, res) => {
       res.status(500).json({ error: 'Error fetching dashboard statistics' });
   }
 }
+
+
+// exports.refreshToken = async (req, res) => {
+//   const { refreshToken } = req.body;
+//    console.log("refresh token api called in admin ---", refreshToken);
+//   if (!refreshToken) {
+//     return res.status(401).json({ message: 'Refresh token required' });
+//   }
+
+//   try {
+//     const decoded = jwt.verify(refreshToken, process.env.JWT_Admin_REFRESH_SECRET);
+//     const payload = { id: decoded.id, email: decoded.email, role: decoded.role };
+
+//     // Generate a new access token
+//     const newAccessToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1m' });
+//     console.log("new access token",newAccessToken)
+//     res.json({ accessToken: newAccessToken }); 
+//   } catch (error) {
+//     res.status(401).json({ message: 'Invalid refresh token' });
+//   }
+// };
+
+
+exports.refreshToken = async (req, res) => {
+  const { adminrefreshToken } = req.body;  // update this line
+  console.log("refresh token api called in admin ---", adminrefreshToken);
+  if (!adminrefreshToken) {
+    return res.status(401).json({ message: 'Refresh token required' });
+  }
+
+  try {
+    const decoded = jwt.verify(adminrefreshToken, process.env.JWT_Admin_REFRESH_SECRET);
+    const payload = { id: decoded.id, email: decoded.email, role: decoded.role };
+
+    // Generate a new access token
+    const newAccessToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' });
+    console.log("new access token", newAccessToken);
+    res.json({ accessToken: newAccessToken });
+  } catch (error) {
+    res.status(401).json({ message: 'Invalid refresh token' });
+  }
+};
