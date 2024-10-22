@@ -6,9 +6,12 @@ const {   BookAppointment,
           getDoctorSlots,
           getBookingHistory,
           DownloadInvoice,
-          CancelAppointment } = require('../Controller/AppointmentController');
+          CancelAppointment, 
+          CreateOrder,
+          ConfirmPayment} = require('../Controller/AppointmentController');
 
-
+router.post('/create-order', CreateOrder);
+router.post('/confirm-payment', ConfirmPayment);
 router.get('/book-appointment/:docId',getDoctorSlots);
 router.post('/book-appointment',passport.authenticate('user-rule', { session: false }), BookAppointment);
 router.get('/download/:appointmentId', DownloadInvoice);

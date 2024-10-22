@@ -2,7 +2,15 @@ const Doctor = require('../Model/DoctorModel');
 const { generateInvoice } = require('../utils/invoiceUtils'); 
 const User = require('../Model/UserModel'); 
 const AppointmentModel = require('../Model/AppointmentModel');
+require('dotenv').config();
 const path = require('path');
+const Razorpay = require('razorpay');
+const shortid = require('shortid');
+  
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET,
+});
 
 exports.DownloadInvoice = async (req, res) => {
      console.log("in side downloadinvoice ------")
@@ -171,3 +179,51 @@ exports.CancelAppointment = async (req, res) => {
 };
 
 
+exports.CreateOrder = async (req, res) => {
+  let { amount } = req.body;
+  try {
+    amount = Number(amount);
+    if (isNaN(amount) || amount <= 0) {
+      return res.status(400).send("Invalid amount");
+    }
+
+    const payment_capture = 1;
+    const currency = "INR";
+    const options = {
+      amount: amount * 100, // Amount in paisa (multiply by 100)
+      currency,
+      receipt: shortid.generate(),
+      payment_capture,
+    };
+
+    const response = await razorpay.orders.create(options);
+    res.json({
+      id: response.id,
+      currency: response.currency,
+      amount: response.amount,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error creating order");
+  }
+};
+
+exports.ConfirmPayment = async (req, res) => {
+  const { appointmentId } = req.body;
+  console.log("confirm after payment");
+  
+  try {
+    const appointment = await AppointmentModel.findById(appointmentId);
+    if (!appointment) {
+      return res.status(404).send("Appointment not found");
+    }
+
+    appointment.isCompleted = true;
+    await appointment.save();
+
+    res.status(200).json({ success: true, message: "Payment confirmed and appointment updated" });
+  } catch (error) {
+    console.error("Error confirming payment:", error);
+    res.status(500).send("Error confirming payment");
+  }
+};
