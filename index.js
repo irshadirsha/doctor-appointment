@@ -1,7 +1,8 @@
 const express = require('express')
 const cors = require ('cors')
 const passport = require('passport');
-const db = require ('./config/connection')
+// const db = require ('./config/connection')
+const { db } = require('./config/connection');
 
 
 require('dotenv').config();

@@ -1,46 +1,99 @@
+// const User = require('../Model/UserModel');
+// const bcrypt = require('bcryptjs');
+// const jwt = require('jsonwebtoken');
+// const otpService = require('../utils/otpService');
+// const emailService = require('../utils/emailService');
+// const mongoose = require('mongoose');
+// const { client } = require('../config/connection');
+
 const User = require('../Model/UserModel');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const otpService = require('../utils/otpService');
 const emailService = require('../utils/emailService');
 const mongoose = require('mongoose');
-
+const { client } = require('../config/connection');
 
 const generateToken = (payload, secret, expiresIn) => {
     return jwt.sign(payload, secret, { expiresIn });
 };
-exports.register = async (req, res) => {
-    try {
-        const { name, email, password } = req.body;
-        console.log("api called in post register succesfully", name, email, password);
-        
-        let user = await User.findOne({ email });
-        if (user) {
-            return res.status(400).json({ message: 'User already exists' });
-        }
+// exports.register = async (req, res) => {
+//     try {
+//         const { name, email, password } = req.body;
+//         console.log("api called in post register succesfully", name, email, password);
 
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const otp = otpService.generateOtp();
+//         if (mongoose.connection.readyState !== 1) {
+//             console.error("Database is not connected. Connection state:", mongoose.connection.readyState);
+//             return res.status(500).json({ message: 'Database connection error. Please try again later.' });
+//         }
+        
+//         let user = await User.findOne({ email });
+//         if (user) {
+//             return res.status(400).json({ message: 'User already exists' });
+//         }
+
+//         const hashedPassword = await bcrypt.hash(password, 10);
+//         const otp = otpService.generateOtp();
        
         
-        user = new User({
-            name,
-            email,
-            password: hashedPassword,
-            otp,
-            otpCreatedAt: new Date(),
-            isVerified: false,  
-        });
+//         user = new User({
+//             name,
+//             email,
+//             password: hashedPassword,
+//             otp,
+//             otpCreatedAt: new Date(),
+//             isVerified: false,  
+//         });
 
-        await user.save();
+//         await user.save();
+//         console.log("userrr",user)
+//         await emailService.sendOtp(user.email, user.otp);
+//         res.status(201).json({ message: 'User registered successfully. OTP sent to email.' });
+//     } catch (error) {
+//         res.status(500).json({ message: error.message });
+//     }
+// };
 
-        await emailService.sendOtp(user.email, user.otp);
-        res.status(201).json({ message: 'User registered successfully. OTP sent to email.' });
+
+
+exports.register = async (req, res) => {
+    try {
+      const { name, email, password } = req.body;
+      console.log("API called in post register successfully", name, email, password);
+      
+      const database = client.db('DoctorBooking'); // Ensure the database name is correct
+      const usersCollection = database.collection('users'); // Ensure collection name matches MongoDB
+  
+      const existingUser = await usersCollection.findOne({ email });
+      if (existingUser) {
+        return res.status(400).json({ message: 'User already exists' });
+      }
+  
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const otp = otpService.generateOtp();
+  
+      const newUser = {
+        name,
+        email,
+        password: hashedPassword,
+        otp,
+        otpCreatedAt: new Date(),
+        isVerified: false,
+        role: 'user',
+        appointments: [],
+      };
+  
+      // Insert user directly using MongoDB client
+      await usersCollection.insertOne(newUser);
+      console.log("User added successfully:", newUser);
+  
+      await emailService.sendOtp(newUser.email, newUser.otp);
+      res.status(201).json({ message: 'User registered successfully. OTP sent to email.' });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+      console.error("Error during registration:", error);
+      res.status(500).json({ message: error.message });
     }
-};
-
+  };
 // OTP Verification
 exports.verifyOtp = async (req, res) => {
     try {
