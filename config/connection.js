@@ -5,44 +5,36 @@ require('dotenv').config();
 
 const keyVaultNamespace = 'encryption.__keyVault';
 
-// Load the master key and define kmsProviders
 const masterKey = Buffer.from(process.env.MASTER_KEY, 'base64');
 const kmsProviders = { local: { key: masterKey } };
 
-// Correct keyId initialization with UUID (4) subtype
-// const keyId = new Binary(Buffer.from(process.env.KEY_ID, 'base64'), Binary.SUBTYPE_UUID);
-
-// MongoDB Client with encryption enabled
-const client = new MongoClient(process.env.MONGO_URI, {
+const client = new MongoClient(process.env.MONGO_URI, { 
   autoEncryption: {
     keyVaultNamespace,
-    kmsProviders,
-    schemaMap: {
+    kmsProviders,   
+    schemaMap: {                                  
       'DoctorBooking.users': {
         bsonType: 'object',
         encryptMetadata: {
           keyId: [new Binary(Buffer.from(process.env.KEY_ID, 'base64'), 4)]
       },
         properties: {
-          email: {
+          email: { 
             encrypt: {
               bsonType: 'string',
-              algorithm: 'AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic',
-           
-            },
+              algorithm: 'AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic',  
+            },   
           },
           password: {
             encrypt: {
               bsonType: 'string',
-              algorithm: 'AEAD_AES_256_CBC_HMAC_SHA_512-Random',
-           
+              algorithm: 'AEAD_AES_256_CBC_HMAC_SHA_512-Random',  
             },
           },
           otp: {
             encrypt: {
               bsonType: 'string',
               algorithm: 'AEAD_AES_256_CBC_HMAC_SHA_512-Random',
-             
             },
           },
         },
@@ -51,7 +43,7 @@ const client = new MongoClient(process.env.MONGO_URI, {
   },
 });
 
-// Function to connect to the database
+
 const db = async () => {
   try {
     await client.connect();
@@ -65,9 +57,10 @@ const db = async () => {
   }
 };
 
-// Function to create a new encryption key
+
 async function createKey() {
   try {
+    console.log("inside create key functon")
     const mongoClient = new MongoClient(process.env.MONGO_URI);
     await mongoClient.connect();
 
